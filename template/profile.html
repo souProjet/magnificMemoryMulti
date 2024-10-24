@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnific Memory 😍 - Mon profil</title>
+    <link rel="shortcut icon" href="./assets/img/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="./assets/css/profile.css">
+    <link rel="stylesheet" href="./assets/css/header.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">
+                    <img src="./assets/img/logo.png" alt="Logo MagnificMemory">
+                    <span>MagnificMemory</span>
+                </a>
+                <div class="nav-links">
+                    <a href="/" class="nav-button">Accueil</a>
+                    <a href="/game.html" class="nav-button">Jouer</a>
+                    <a href="/profile.html" class="nav-button">Profil</a>
+                    <a href="/register.html" class="nav-button">S'inscrire</a>
+                    <a href="/login.html" class="nav-button">Se connecter</a>
+                    <button class="logout-button nav-button">Se déconnecter</button>
+                    <span id="username" class="username hidden"></span>
+                </div>
+            </nav>
+            <div class="header-content">
+                <h1>Votre jeu de Memory inoubliable !</h1>
+            </div>
+        </div>
+    </header>
+    <section class="bg-gray-100 py-16">
+        <div class="container mx-auto mt-8 p-4">
+            <h1 class="text-3xl font-bold mb-6">Mon Profil</h1>
+
+            <div class="mb-4">
+                <label for="name" class="block text-sm font-medium text-gray-700">Nom d'utilisateur :</label>
+                <input type="text" id="name" readonly
+                    class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none">
+            </div>
+
+            <div class="mb-4">
+                <label for="email" class="block text-sm font-medium text-gray-700">Email :</label>
+                <input type="email" id="email" readonly
+                    class="mt-1 block w-full px-3 py-2 bg-gray-100 border border-gray-300 rounded-md shadow-sm focus:outline-none">
+            </div>
+
+            <div class="mb-4">
+                <label for="memoryChoice" class="block text-sm font-medium text-gray-700">Choisissez votre jeu Memory :</label>
+                <select id="memoryChoice"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    <option value="animaux" data-nb-item="27" data-img-extension="webp" selected>Memory Animaux</option>
+                    <option value="alphabet-scrabble" data-nb-item="26" data-img-extension="png">Memory Alphabet</option>
+                    <option value="animauxAnimes" data-nb-item="8" data-img-extension="webp">Memory Animaux Animes</option>
+                    <option value="animauxdomestiques" data-nb-item="10" data-img-extension="jpg">Memory Animaux Domestiques</option>
+                    <option value="chiens" data-nb-item="23" data-img-extension="webp">Memory Chiens</option>
+                    <option value="dinosaures" data-nb-item="10" data-img-extension="jpg">Memory Dinosaures</option>
+                    <option value="dinosauresAvecNom" data-nb-item="10" data-img-extension="jpg">Memory Dinosaures Avec Nom</option>
+                    <option value="legumes" data-nb-item="6" data-img-extension="svg">Memory Légumes</option>
+                </select>
+            </div>
+
+            <div class="mb-4">
+                <label for="memorySize" class="block text-sm font-medium text-gray-700">Taille du Memory :</label>
+                <select id="memorySize"
+                    class="mt-1 block w-full px-3 py-2 bg-white border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+
+                </select>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold mb-4">Mes 5 dernières parties</h2>
+                <table class="w-full border-collapse border border-gray-300">
+                    <thead>
+                        <tr class="bg-gray-200">
+                            <th class="border border-gray-300 px-4 py-2">Jeu</th>
+                            <th class="border border-gray-300 px-4 py-2">Taille</th>
+                            <th class="border border-gray-300 px-4 py-2">Score</th>
+                            <th class="border border-gray-300 px-4 py-2">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lastGamesTable">
+
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </section>
+
+
+    <script src="./assets/js/profile.js"></script>
+</body>
+
+</html>

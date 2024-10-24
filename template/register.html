@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magnific Memory 😍 - Inscription</title>
+    <link rel="shortcut icon" href="./assets/img/logo.png" type="image/x-icon">
+    <link rel="stylesheet" href="./assets/css/register.css">
+    <link rel="stylesheet" href="./assets/css/header.css">
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="/" class="logo">
+                    <img src="./assets/img/logo.png" alt="Logo MagnificMemory">
+                    <span>MagnificMemory</span>
+                </a>
+                <div class="nav-links">
+                    <a href="/" class="nav-button">Accueil</a>
+                    <a href="/game.html" class="nav-button">Jouer</a>
+                    <a href="/profile.html" class="nav-button">Profil</a>
+                    <a href="/register.html" class="nav-button">S'inscrire</a>
+                    <a href="/login.html" class="nav-button">Se connecter</a>
+                </div>
+            </nav>
+            <div class="header-content">
+                <h1>Votre jeu de Memory inoubliable !</h1>
+            </div>
+        </div>
+    </header>
+    <div class="container register-section">
+        <form>
+            <h1 class="form-title">Inscription à MagnificMemory</h1>
+            <div class="input-container">
+                <label for="username-input">Votre nom d'utilisateur : </label>
+                <input id="username-input" type="text" placeholder="toto" autocomplete="off">
+                <span class="username-error-message error-message">Nom d'utilisateur invalide</span>
+            </div>
+            <div class="input-container">
+                <label for="email">Votre adresse email : </label>
+                <input id="email" type="email" placeholder="toto@exemple.com" autocomplete="off">
+                <span class="email-error-message error-message">Email invalide</span>
+            </div>
+            <div class="input-container">
+                <label for="password">Votre mot de passe :</label>
+                <input id="password" type="password" placeholder="Choisissez un mot de passe fort 💪">
+                <div class="password-strength">
+                    <div class="strength-section-container">
+                        <div class="strength-section" data-strength="weak"></div>
+                        <span class="strength-text">Faible</span>
+                    </div>
+                    <div class="strength-section-container">
+                        <div class="strength-section" data-strength="medium"></div>
+                        <span class="strength-text">Moyen</span>
+                    </div>
+                    <div class="strength-section-container">
+                        <div class="strength-section" data-strength="strong"></div>
+                        <span class="strength-text">Fort</span>
+                    </div>
+                </div>
+            </div>
+            <button class="submit-button">Je m'inscris</button>
+            <span class="login-link">Déjà un compte ? <a href="login.html">Je me connecte</a></span>
+
+            <p class="success-message">Votre compte a été créé avec succès ! Vous allez être redirigé.</p>
+        </form>
+    </div>
+
+    <script type="module" src="./assets/js/register.js"></script>
+</body>
+
+</html>
