@@ -8,6 +8,8 @@
     <link rel="shortcut icon" href="/assets/img/logo.png" type="image/x-icon">
     <link rel="stylesheet" href="/assets/css/game.css">
     <link rel="stylesheet" href="/assets/css/header.css">
+    <script src="/socket.io/socket.io.js"></script>
+
 </head>
 
 <body>
@@ -50,6 +52,8 @@
                             <option value="legumes" data-nb-item="6" data-img-extension="svg">Memory Légumes</option>
                         </select>
                         <select id="memorySize"></select>
+                        <button id="multiplayerButton" class="multi-button">Jouer en multijoueur</button>
+
                     </div>
                     <div id="gamegrid"></div>
                     <div id="user-message">

@@ -71,7 +71,7 @@ function initializeDatabase() {
 const rooms = new Map();
 
 io.on('connection', (socket) => {
-    console.log('Un utilisateur s\'est connecté');
+    console.log('Le joueur avec l\'id ' + socket.id + ' s\'est connecté');
 
     socket.on('register', async (userData) => {
         try {
@@ -117,7 +117,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('joinRoom', (username) => {
+    socket.on('joinRoom', (username, gridSize) => {
         let roomToJoin;
         for (const [roomId, room] of rooms) {
             if (room.players.length < 2) {
@@ -128,7 +128,8 @@ io.on('connection', (socket) => {
 
         if (!roomToJoin) {
             roomToJoin = generateRoomId();
-            rooms.set(roomToJoin, { players: [], gameState: null });
+            rooms.set(roomToJoin, { players: [], gameState: null, gridSize: gridSize });
+            console.log('La room ' + roomToJoin + ' a été créée');
         }
 
         const room = rooms.get(roomToJoin);
@@ -137,19 +138,24 @@ io.on('connection', (socket) => {
         
         io.to(roomToJoin).emit('playerJoined', room.players);
         socket.emit('roomJoined', roomToJoin);
+        console.log('Le joueur avec l\'id ' + socket.id + ' a rejoint la room ' + roomToJoin);
 
         if (room.players.length === 2) {
-            startGame(roomToJoin);
+            startGame(roomToJoin, room.gridSize);
         }
     });
 
     socket.on('flipCard', ({ roomId, cardIndex }) => {
         const room = rooms.get(roomId);
         if (room && room.gameState) {
-            // Logique pour retourner une carte et vérifier les paires
-            // Mettre à jour le gameState et envoyer les mises à jour aux joueurs
-            io.to(roomId).emit('gameStateUpdated', room.gameState);
+            room.gameState.cardsFlipped.push(cardIndex);
+            io.to(roomId).emit('cardFlipped', { cardIndex, playerId: socket.id });
+            
         }
+    });
+
+    socket.on('changeTurn', ({ roomId }) => {
+        changeTurn(roomId);
     });
 
     socket.on('saveScore', ({ userId, memoryType, gridSize, score }) => {
@@ -167,14 +173,29 @@ io.on('connection', (socket) => {
         }
     });
 
+    
+    socket.on('leaveRoom', (roomId) => {
+       const room = rooms.get(roomId);
+       if (room) {
+        room.players = room.players.filter(player => player.id !== socket.id);
+        console.log('Le joueur avec l\'id ' + socket.id + ' a quitté la room ' + roomId);
+        if (room.players.length === 0) {
+            rooms.delete(roomId);
+            console.log('La room ' + roomId + ' a été supprimée car elle est vide');
+        }
+       }
+    });
+
+
     socket.on('disconnect', () => {
-        console.log('Un utilisateur s\'est déconnecté');
+        console.log('Le joueur avec l\'id ' + socket.id + ' s\'est déconnecté');
         for (const [roomId, room] of rooms) {
             const playerIndex = room.players.findIndex(player => player.id === socket.id);
             if (playerIndex !== -1) {
                 room.players.splice(playerIndex, 1);
                 if (room.players.length === 0) {
                     rooms.delete(roomId);
+                    console.log('La room ' + roomId + ' a été supprimée car elle est vide');
                 } else {
                     io.to(roomId).emit('playerLeft', room.players);
                 }
@@ -192,12 +213,39 @@ function generateToken(length) {
     return Math.random().toString(36).substring(2, length + 2);
 }
 
-function startGame(roomId) {
+function startGame(roomId, gridSize) {
     const room = rooms.get(roomId);
     room.gameState = {
-        // Initialiser l'état du jeu (cartes, tour du joueur, etc.)
+        currentTurn: room.players[Math.floor(Math.random() * room.players.length)].id,
+        cardsFlipped: [],
+        grid: genRandomGrid(gridSize)
     };
     io.to(roomId).emit('gameStarted', room.gameState);
+}
+
+function genRandomGrid(gridSize) {
+    let img_tab = [];
+    for (let i = 1; i <= gridSize / 2; i++) {
+        img_tab.push(i);
+        img_tab.push(i);
+    }
+    return fisherYatesAlgo(img_tab);
+}
+
+function fisherYatesAlgo(tab) {
+    for (let i = tab.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [tab[i], tab[j]] = [tab[j], tab[i]];
+    }
+    return tab;
+}
+
+function changeTurn(roomId) {
+    const room = rooms.get(roomId);
+    const currentPlayerIndex = room.players.findIndex(player => player.id === room.gameState.currentTurn);
+    const nextPlayerIndex = (currentPlayerIndex + 1) % room.players.length;
+    room.gameState.currentTurn = room.players[nextPlayerIndex].id;
+    io.to(roomId).emit('turnChanged', room.gameState.currentTurn);
 }
 
 server.listen(PORT, () => {

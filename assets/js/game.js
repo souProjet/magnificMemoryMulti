@@ -1,3 +1,5 @@
+const socket = io();
+
 let memory_type = localStorage.getItem('memoryType') ? localStorage.getItem('memoryType').split(';')[0] : "animaux";
 let memory_type_name = localStorage.getItem('memoryType') ? localStorage.getItem('memoryType').split(';')[1] : "Animaux";
 let memory_size = localStorage.getItem('memorySize') || "3x4";
@@ -16,6 +18,73 @@ const username = document.getElementById('username');
 const memoryChoice = document.getElementById('memoryChoice');
 const memorySize = document.getElementById('memorySize');
 
+let isMultiplayer = false;
+let currentRoom = null;
+let currentTurn = null;
+const playMultiButton = document.getElementById('multiplayerButton');
+
+function initializeMultiplayer() {
+    playMultiButton.addEventListener('click', () => {
+        if (!isMultiplayer) {
+            const user = retrieveUser();
+            const username = user !== -1 ? user.username : "Anonyme";
+            socket.emit('joinRoom', username, grid_size);
+            isMultiplayer = true;
+            playMultiButton.textContent = 'Quitter la partie';
+        } else {
+            socket.emit('leaveRoom', currentRoom);
+            isMultiplayer = false;
+            currentRoom = null;
+            playMultiButton.textContent = 'Jouer en multijoueur';
+            initializeGame();
+        }
+    });
+
+    socket.on('playerJoined', (players) => {
+        user_message.textContent = `Joueurs connectés: ${players.map(p => p.username).join(', ')}`;
+        if (players.length < 2) {
+            user_message.textContent += ' - En attente d\'un autre joueur...';
+        }
+    });
+
+    socket.on('roomJoined', (roomId) => {
+        currentRoom = roomId;
+    });
+
+    socket.on('gameStarted', (gameState) => {
+        user_message.textContent = 'La partie commence !';
+        currentTurn = gameState.currentTurn;
+        if (currentTurn === socket.id) {
+            user_message.textContent = 'C\'est votre tour !';
+        } else {
+            user_message.textContent = 'En attente du coup adverse...';
+        }
+
+        generateGrid(gameState.grid);
+    });
+
+    socket.on('turnChanged', (playerId) => {
+        currentTurn = playerId;
+        if (currentTurn === socket.id) {
+            user_message.textContent = 'C\'est votre tour !';
+        } else {
+            user_message.textContent = 'En attente de l\'autre joueur...';
+        }
+    });
+
+    socket.on('cardFlipped', (data) => {
+        if (data.playerId !== socket.id) {
+            const cards = document.querySelectorAll('.memory-card');
+            cards[data.cardIndex].classList.add('flipped');
+            returned_cards.push(cards[data.cardIndex]);
+            if (returned_cards.length % 2 === 0) {
+                block_click = true;
+                nbRounds++;
+                checkIfPair(returned_cards.slice(-2));
+            }
+        }
+    });
+}
 
 const successMessageList = [
     "Bien joué !",
@@ -46,9 +115,11 @@ document.addEventListener('DOMContentLoaded', () => {
     memorySize.value = memory_size;
 
     generateGrid();
+    initializeMultiplayer();
 
     // afficher le tableau des meilleurs scores
     displayBestScores();
+
 });
 
 // Gestionnaire d'événements pour le changement de type de mémoire
@@ -57,14 +128,14 @@ memoryChoice.addEventListener('change', () => {
     memory_type_name = memoryChoice.options[memoryChoice.selectedIndex].textContent;
     img_extension = memoryChoice.options[memoryChoice.selectedIndex].getAttribute('data-img-extension');
     img_path = '../assets/img/ressources/' + memory_type + '/';
-    
+
     let maxItems = parseInt(memoryChoice.options[memoryChoice.selectedIndex].getAttribute('data-nb-item'));
     let config = getAllConfigFromNbItem(maxItems);
     let lastMemorySize = memorySize.value;
     fillMemorySizeOptions(config);
-    
+
     memorySize.value = config.includes(lastMemorySize) ? lastMemorySize : config[0];
-    
+
     memory_size = memorySize.value;
     grid_size = parseInt(memory_size.split('x')[0]) * parseInt(memory_size.split('x')[1]);
 
@@ -81,8 +152,12 @@ memorySize.addEventListener('change', () => {
 
 // Fonction pour initialiser le jeu
 function initializeGame() {
-    resetGame();
-    generateGrid();
+    if (isMultiplayer) {
+        user_message.textContent = 'En attente d\'un autre joueur...';
+    } else {
+        resetGame();
+        generateGrid();
+    }
 }
 
 function resetGame() {
@@ -93,7 +168,7 @@ function resetGame() {
 }
 
 
-function generateGrid() {
+function generateGrid(predefinedGrid = null) {
     const [rows, cols] = memory_size.split('x').map(Number);
     const gameGrid = document.getElementById('gamegrid');
     const gridWidth = Math.min(500, window.innerWidth * 0.7);
@@ -107,8 +182,8 @@ function generateGrid() {
     `;
     gameGrid.innerHTML = '';
 
-    const img_tab = genRandomGrid(grid_size);
-    const cards = Array.from({length: grid_size}, () => createCard(cardSize));
+    const img_tab = predefinedGrid || genRandomGrid(grid_size);
+    const cards = Array.from({ length: grid_size }, () => createCard(cardSize));
     cards.forEach((card, i) => {
         card.querySelector('.front').style.backgroundImage = `url(${img_path}${img_tab[i]}.${img_extension})`;
         gameGrid.appendChild(card);
@@ -126,10 +201,15 @@ function createCard(size) {
 }
 
 function addCardEventListeners(cards) {
-    cards.forEach(card => {
+    cards.forEach((card, index) => {
         card.addEventListener('click', () => {
             if (block_click || game_finished || card.classList.contains('matched')) return;
+            if (isMultiplayer && currentTurn !== socket.id) return;
+
             card.classList.toggle('flipped');
+            if (isMultiplayer) {
+                socket.emit('flipCard', { roomId: currentRoom, cardIndex: index });
+            }
             returned_cards.push(card);
             if (returned_cards.length % 2 === 0) {
                 block_click = true;
@@ -139,6 +219,7 @@ function addCardEventListeners(cards) {
         });
     });
 }
+
 
 function fillMemorySizeOptions(config) {
     memorySize.innerHTML = config.map(size => `<option value="${size}">${size}</option>`).join('');
@@ -179,8 +260,13 @@ function matchFound(cards) {
 
     if (returned_cards.length === grid_size) {
         game_finished = true;
-        user_message.textContent = `Bravo ! Tu as trouvé toutes les paires en ${nbRounds} tours !`;
-        saveScore();
+        if (isMultiplayer) {
+            socket.emit('gameFinished', { roomId: currentRoom, score: nbRounds });
+            user_message.textContent = 'La partie est terminée !';
+        } else {
+            user_message.textContent = `Bravo ! Tu as trouvé toutes les paires en ${nbRounds} tours !`;
+            saveScore();
+        }
     }
 
     setTimeout(() => {
@@ -192,12 +278,17 @@ function matchFound(cards) {
 
 function matchNotFound(cards) {
     user_message.textContent = errorMessageList[Math.floor(Math.random() * errorMessageList.length)];
+
     setTimeout(() => {
         cards[0].classList.toggle('flipped');
         cards[1].classList.toggle('flipped');
         returned_cards.splice(0, 2);
         block_click = false;
         user_message.textContent = '';
+        console.log(currentTurn, socket.id);
+        if (isMultiplayer && currentTurn !== socket.id) {
+            socket.emit('changeTurn', { roomId: currentRoom });
+        }
     }, 1000);
 }
 
