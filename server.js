@@ -3,12 +3,37 @@ const http = require('http');
 const socketIo = require('socket.io');
 const sqlite3 = require('sqlite3').verbose();
 const bcrypt = require('bcrypt');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
 const PORT = process.env.PORT || 3000;
+
+// Servir les fichiers statiques
+app.use('/assets', express.static(path.join(__dirname, 'assets')));
+
+// Routes pour le frontend
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'template', 'index.html'));
+});
+
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'template', 'login.html'));
+});
+
+app.get('/register', (req, res) => {
+    res.sendFile(path.join(__dirname, 'template', 'register.html'));
+});
+
+app.get('/profile', (req, res) => {
+    res.sendFile(path.join(__dirname, 'template', 'profile.html'));
+});
+
+app.get('/game', (req, res) => {
+    res.sendFile(path.join(__dirname, 'template', 'game.html'));
+});
 
 // Connexion à la base de données SQLite
 const db = new sqlite3.Database('./memory_game.db', (err) => {

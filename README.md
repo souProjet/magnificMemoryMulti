@@ -1,3 +1,3 @@
-# MagnificMemoryMulti BACKEND
+# MagnificMemoryMulti
 
 ![screenshot](game-flow.png)
